@@ -1,0 +1,85 @@
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор v1.0 (build 10)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="calc-container">
+    <div class="calc-header">
+        <span class="calc-title">Калькулятор</span>
+        <button id="about-btn" class="info-icon" title="Про програму">ℹ</button>
+    </div>
+
+    <div class="display">
+        <div id="history" class="history-line"></div>
+        <div id="output" class="output-line">0</div>
+    </div>
+
+    <div class="keypad">
+        <button class="btn btn-fn" onclick="clearAll()">AC</button>
+        <button class="btn btn-fn" onclick="deleteLast()">DEL</button>
+        <button class="btn btn-fn" onclick="appendValue('(')">(</button>
+        <button class="btn btn-fn" onclick="appendValue(')')">)</button>
+
+        <button class="btn btn-fn" onclick="calculateSquareRoot()">√</button>
+        <button class="btn btn-fn" onclick="appendValue('**')">xʸ</button>
+        <button class="btn btn-fn" onclick="toggleSign()">±</button>
+        <button class="btn btn-op" onclick="appendValue('/')">÷</button>
+
+        <button class="btn btn-num" onclick="appendValue('7')">7</button>
+        <button class="btn btn-num" onclick="appendValue('8')">8</button>
+        <button class="btn btn-num" onclick="appendValue('9')">9</button>
+        <button class="btn btn-op" onclick="appendValue('*')">×</button>
+
+        <button class="btn btn-num" onclick="appendValue('4')">4</button>
+        <button class="btn btn-num" onclick="appendValue('5')">5</button>
+        <button class="btn btn-num" onclick="appendValue('6')">6</button>
+        <button class="btn btn-op" onclick="appendValue('-')">−</button>
+
+        <button class="btn btn-num" onclick="appendValue('1')">1</button>
+        <button class="btn btn-num" onclick="appendValue('2')">2</button>
+        <button class="btn btn-num" onclick="appendValue('3')">3</button>
+        <button class="btn btn-op" onclick="appendValue('+')">+</button>
+
+        <button class="btn btn-num btn-zero" onclick="appendValue('0')">0</button>
+        <button class="btn btn-num" onclick="appendValue('.')">.</button>
+        <button class="btn btn-equal" onclick="computeResult()">=</button>
+    </div>
+
+    <footer>
+        <p>© 2026 <strong>Максим Ковалишин</strong>. Усі права захищені.</p>
+        <p class="footer-sub">Калькулятор v1.0 (build 10) • Вміст захищено авторським правом</p>
+    </footer>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Про програму</h2>
+        <div class="modal-badge">Версія: v1.0 (build 10) • 2026</div>
+        <p class="modal-desc">
+            Швидкий та ергономічний веб-калькулятор із розширеними математичними функціями. Розроблено для швидких повсякденних і технічних обчислень.
+        </p>
+
+        <h3>Що нового в build 10:</h3>
+        <ul class="whats-new-list">
+            <li><strong>Новий дизайн кнопок:</strong> плавний неоморфний стиль з тактильним відгуком та кольоровим акцентом на операціях.</li>
+            <li><strong>Розширені можливості:</strong> додано обчислення квадратного кореня (√) та довільного степеня (xʸ).</li>
+            <li><strong>Пріоритет операцій:</strong> підтримка круглих дужок для складних виразів.</li>
+            <li><strong>Функція зміни знака (±):</strong> миттєва інверсія чисел без зайвих натискань.</li>
+            <li><strong>Оновлена інформаційна панель:</strong> структуроване вікно версії та довідки.</li>
+        </ul>
+
+        <div class="modal-footer">
+            <p>Автор: <strong>Максим Ковалишин</strong></p>
+            <p class="legal-note">Калькулятор v1.0 (build 10). 2026, вміст захищений під авторським правом.</p>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
