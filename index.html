@@ -1,85 +1,1103 @@
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор v1.0 (build 10)</title>
-    <link rel="stylesheet" href="style.css">
+    <title>ValutaFlow Exchange & Finance Pro v2.1 (build 94)</title>
+    
+    <!-- Підключення бібліотеки Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Підключення шрифтів Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Темна тема (За замовчуванням) */
+            --bg-base: #090b14;
+            --bg-card: rgba(20, 25, 40, 0.7);
+            --bg-card-hover: rgba(30, 38, 60, 0.85);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #10b981;
+            --accent-primary-glow: rgba(16, 185, 129, 0.3);
+            --accent-secondary: #6366f1;
+            --accent-danger: #ef4444;
+            --accent-danger-glow: rgba(239, 68, 68, 0.3);
+            --shadow-elevation: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --transition-speed: 0.3s;
+        }
+
+        [data-theme="light"] {
+            --bg-base: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(255, 255, 255, 1);
+            --bg-glass: rgba(0, 0, 0, 0.03);
+            --border-glass: rgba(0, 0, 0, 0.08);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-primary: #059669;
+            --accent-primary-glow: rgba(5, 150, 105, 0.2);
+            --accent-secondary: #4f46e5;
+            --accent-danger: #dc2626;
+            --accent-danger-glow: rgba(220, 38, 38, 0.2);
+            --shadow-elevation: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+            --chart-grid: rgba(0, 0, 0, 0.06);
+        }
+
+        [data-theme="neon"] {
+            --bg-base: #050014;
+            --bg-card: rgba(15, 5, 45, 0.75);
+            --bg-card-hover: rgba(25, 10, 65, 0.9);
+            --bg-glass: rgba(0, 245, 255, 0.05);
+            --border-glass: rgba(0, 245, 255, 0.25);
+            --text-primary: #e0f2fe;
+            --text-secondary: #7dd3fc;
+            --text-muted: #0369a1;
+            --accent-primary: #00f5ff;
+            --accent-primary-glow: rgba(0, 245, 255, 0.4);
+            --accent-secondary: #b026ff;
+            --accent-danger: #ff0055;
+            --accent-danger-glow: rgba(255, 0, 85, 0.4);
+            --shadow-elevation: 0 0 50px rgba(0, 245, 255, 0.15);
+            --chart-grid: rgba(0, 245, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color var(--transition-speed) ease,
+                        border-color var(--transition-speed) ease,
+                        color var(--transition-speed) ease,
+                        box-shadow var(--transition-speed) ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            /* Преміальний анімований бекграунд */
+            background-image: 
+                radial-gradient(circle at 10% 20%, var(--accent-primary-glow) 0px, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        /* Ticker Bar */
+        .market-ticker {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 10px 0;
+            font-size: 0.85rem;
+            overflow: hidden;
+            white-space: nowrap;
+            display: flex;
+            user-select: none;
+            backdrop-filter: blur(16px);
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .ticker-track {
+            display: inline-flex;
+            gap: 40px;
+            animation: tickerScroll 30s linear infinite;
+        }
+
+        .ticker-track:hover { animation-play-state: paused; }
+
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .tag-bull { color: var(--accent-primary); }
+        .tag-bear { color: var(--accent-danger); }
+
+        .app-shell {
+            display: flex;
+            flex: 1;
+            max-width: 1500px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+            gap: 24px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-elevation);
+            backdrop-filter: blur(20px);
+            flex-shrink: 0;
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .brand-logo {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: #ffffff;
+            box-shadow: 0 8px 25px var(--accent-primary-glow);
+            font-weight: 800;
+        }
+
+        .brand-text h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .brand-text span {
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover);
+            transform: translateX(4px);
+            border-color: var(--border-glass);
+        }
+
+        .nav-btn.active {
+            background: var(--accent-primary);
+            color: #090b14;
+            font-weight: 700;
+            box-shadow: 0 8px 20px var(--accent-primary-glow);
+            border-color: transparent;
+        }
+
+        [data-theme="light"] .nav-btn.active { color: #ffffff; }
+
+        .nav-divider {
+            height: 1px;
+            background: var(--border-glass);
+            margin: 16px 0;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        /* Cards */
+        .currency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .curr-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            box-shadow: var(--shadow-elevation);
+            backdrop-filter: blur(16px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .curr-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: transparent;
+            transition: background 0.3s;
+        }
+
+        .curr-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--border-glass);
+            background: var(--bg-card-hover);
+        }
+
+        .curr-card.active-curr {
+            border-color: var(--accent-primary);
+            background: var(--bg-card-hover);
+            box-shadow: 0 10px 30px var(--accent-primary-glow);
+        }
+
+        .curr-card.active-curr::before { background: var(--accent-primary); }
+
+        .curr-flag-name {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .curr-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .curr-flag { font-size: 1.6rem; }
+        .curr-code { font-weight: 700; font-size: 1.2rem; }
+        
+        .curr-rate-main {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .curr-badge {
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .badge-up { background: rgba(16, 185, 129, 0.15); color: var(--accent-primary); }
+        .badge-down { background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); }
+        .badge-neutral { background: rgba(99, 102, 241, 0.15); color: var(--accent-secondary); }
+
+        /* Chart Panel */
+        .chart-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: var(--shadow-elevation);
+            backdrop-filter: blur(20px);
+            margin-top: 8px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .chart-title-area h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .chart-title-area p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        /* Crypto Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .stat-item {
+            background: var(--bg-glass);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stat-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Converter */
+        .converter-view {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-elevation);
+            backdrop-filter: blur(20px);
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .conv-header { margin-bottom: 40px; text-align: center; }
+        .conv-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
+        .conv-header p { color: var(--text-secondary); font-size: 1rem; }
+
+        .conv-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .conv-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 260px;
+        }
+
+        .conv-group label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .conv-input-wrap {
+            display: flex;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .conv-input-wrap:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-glow);
+        }
+
+        .conv-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 20px 24px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+            outline: none;
+            width: 100%;
+        }
+
+        .conv-select {
+            background: var(--bg-card-hover);
+            border: none;
+            border-left: 1px solid var(--border-glass);
+            padding: 0 24px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+        }
+        .conv-select option { background: var(--bg-base); color: var(--text-primary); }
+
+        .swap-btn {
+            align-self: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            cursor: pointer;
+            margin-top: 30px;
+        }
+
+        .swap-btn:hover {
+            transform: rotate(180deg);
+            background: var(--accent-primary);
+            color: #090b14;
+            box-shadow: 0 0 25px var(--accent-primary-glow);
+        }
+
+        .conv-result-panel {
+            margin-top: 32px;
+            background: var(--bg-glass);
+            border: 1px dashed var(--accent-primary);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .res-label { font-size: 1rem; color: var(--text-muted); font-weight: 600; margin-bottom: 12px;}
+        .res-value { font-size: 2.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); margin-bottom: 8px;}
+        .res-rate { font-size: 0.95rem; color: var(--text-secondary); }
+
+        /* Модальні вікна */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            backdrop-filter: blur(12px);
+            padding: 20px;
+        }
+
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow-elevation);
+            transform: scale(0.95);
+        }
+
+        .modal-overlay.active .modal-card { transform: scale(1); }
+
+        .modal-card h3 { font-size: 1.6rem; font-weight: 800; margin-bottom: 16px; }
+        .modal-card p { font-size: 1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
+
+        .theme-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+        .theme-btn {
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-glass);
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-btn.active, .theme-btn:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-card-hover);
+            box-shadow: 0 4px 20px var(--accent-primary-glow);
+        }
+
+        .btn-close {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: var(--accent-primary);
+            color: #090b14;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+        }
+        [data-theme="light"] .btn-close { color: #ffffff; }
+
+        /* Footer */
+        .app-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 24px;
+            text-align: center;
+            backdrop-filter: blur(16px);
+        }
+
+        .copyright-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Адаптивність */
+        @media (max-width: 1024px) {
+            .app-shell { flex-direction: column; padding: 16px; }
+            .sidebar { width: 100%; position: relative; top: 0; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 20px; }
+            .brand-block { margin-bottom: 0; }
+            .nav-list { flex-direction: row; flex-wrap: wrap; width: 100%; margin-top: 20px;}
+            .nav-btn { flex: 1 1 calc(33% - 10px); justify-content: center; }
+            .nav-divider { display: none; }
+        }
+        @media (max-width: 768px) {
+            .nav-btn { flex: 1 1 calc(50% - 10px); }
+            .conv-row { flex-direction: column; gap: 16px; }
+            .swap-btn { margin-top: 10px; margin-bottom: 10px; transform: rotate(90deg); }
+            .swap-btn:hover { transform: rotate(270deg); }
+        }
+        @media (max-width: 480px) {
+            .nav-btn { flex: 1 1 100%; }
+        }
+    </style>
 </head>
-<body>
+<body data-theme="dark">
 
-<div class="calc-container">
-    <div class="calc-header">
-        <span class="calc-title">Калькулятор</span>
-        <button id="about-btn" class="info-icon" title="Про програму">ℹ</button>
+    <!-- Біжучий рядок -->
+    <header class="market-ticker">
+        <div class="ticker-track" id="ticker-track">
+            <span class="ticker-item">Завантаження ринкових даних...</span>
+        </div>
+    </header>
+
+    <div class="app-shell">
+        <!-- Бічна панель -->
+        <aside class="sidebar">
+            <div class="brand-block">
+                <div class="brand-logo">VF</div>
+                <div class="brand-text">
+                    <h1>ValutaFlow Pro</h1>
+                    <span>Build 94 | v2.1</span>
+                </div>
+            </div>
+
+            <ul class="nav-list">
+                <li>
+                    <button class="nav-btn active" id="nav-fiat" onclick="switchTab('fiat')">
+                        🌍 Фіатні ринки
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" id="nav-crypto" onclick="switchTab('crypto')">
+                        ⚡ Крипторинки
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" id="nav-converter" onclick="switchTab('converter')">
+                        💱 Розумний Конвертер
+                    </button>
+                </li>
+                <div class="nav-divider"></div>
+                <li>
+                    <button class="nav-btn" onclick="openModal('theme-modal')">
+                        🎨 Теми
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="openModal('help-modal')">
+                        ❓ Довідка
+                    </button>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            
+            <!-- Вкладка: Фіатні ринки -->
+            <div id="view-fiat">
+                <div class="currency-grid" id="fiat-grid">
+                    <!-- Заповнюється JS -->
+                </div>
+                <section class="chart-panel">
+                    <div class="chart-header">
+                        <div class="chart-title-area">
+                            <h2>
+                                <span id="fiat-chart-title">USD / UAH</span>
+                                <span class="curr-badge" id="fiat-chart-trend">--</span>
+                            </h2>
+                            <p>Історичний графік фіатних котирувань (30 днів)</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="fiatChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Вкладка: Крипторинки -->
+            <div id="view-crypto" style="display: none;">
+                <div class="currency-grid" id="crypto-grid">
+                    <!-- Заповнюється JS -->
+                </div>
+                <section class="chart-panel">
+                    <div class="chart-header">
+                        <div class="chart-title-area">
+                            <h2>
+                                <span id="crypto-chart-title">BTC / USD</span>
+                                <span class="curr-badge" id="crypto-chart-trend">--</span>
+                            </h2>
+                            <p>Волатильність криптоактиву (30 днів)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-canvas-wrap">
+                        <canvas id="cryptoChart"></canvas>
+                    </div>
+
+                    <!-- Свіжа статистика для крипти -->
+                    <div class="stats-grid" id="crypto-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Об'єм 24г</div>
+                            <div class="stat-val" id="stat-vol">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">52 Тиж. Максимум</div>
+                            <div class="stat-val" id="stat-high" style="color: var(--accent-primary)">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">52 Тиж. Мінімум</div>
+                            <div class="stat-val" id="stat-low" style="color: var(--accent-danger)">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Настрій ринку</div>
+                            <div class="stat-val curr-badge" id="stat-sentiment">--</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Вкладка: Розумний Конвертер -->
+            <div id="view-converter" style="display: none;">
+                <div class="converter-view">
+                    <div class="conv-header">
+                        <h2>Розумний Конвертер</h2>
+                        <p>Миттєвий обмін між фіатними та криптоактивами за актуальними курсами</p>
+                    </div>
+                    <div class="conv-row">
+                        <div class="conv-group">
+                            <label>Віддаю</label>
+                            <div class="conv-input-wrap">
+                                <input type="number" id="conv-amount" class="conv-input" value="1" min="0" oninput="calculateConvert()">
+                                <select id="conv-from" class="conv-select" onchange="calculateConvert()">
+                                    <!-- Опції генеруються JS -->
+                                </select>
+                            </div>
+                        </div>
+                        <button class="swap-btn" onclick="swapConverter()">⇅</button>
+                        <div class="conv-group">
+                            <label>Отримую</label>
+                            <div class="conv-input-wrap" style="background: transparent;">
+                                <input type="text" id="conv-result" class="conv-input" value="0.00" readonly style="color: var(--accent-primary);">
+                                <select id="conv-to" class="conv-select" onchange="calculateConvert()">
+                                    <!-- Опції генеруються JS -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="conv-result-panel">
+                        <div class="res-label">Результат конвертації</div>
+                        <div class="res-value" id="res-val-text">0.00</div>
+                        <div class="res-rate" id="res-rate-text">1 -- = --</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <div class="display">
-        <div id="history" class="history-line"></div>
-        <div id="output" class="output-line">0</div>
-    </div>
-
-    <div class="keypad">
-        <button class="btn btn-fn" onclick="clearAll()">AC</button>
-        <button class="btn btn-fn" onclick="deleteLast()">DEL</button>
-        <button class="btn btn-fn" onclick="appendValue('(')">(</button>
-        <button class="btn btn-fn" onclick="appendValue(')')">)</button>
-
-        <button class="btn btn-fn" onclick="calculateSquareRoot()">√</button>
-        <button class="btn btn-fn" onclick="appendValue('**')">xʸ</button>
-        <button class="btn btn-fn" onclick="toggleSign()">±</button>
-        <button class="btn btn-op" onclick="appendValue('/')">÷</button>
-
-        <button class="btn btn-num" onclick="appendValue('7')">7</button>
-        <button class="btn btn-num" onclick="appendValue('8')">8</button>
-        <button class="btn btn-num" onclick="appendValue('9')">9</button>
-        <button class="btn btn-op" onclick="appendValue('*')">×</button>
-
-        <button class="btn btn-num" onclick="appendValue('4')">4</button>
-        <button class="btn btn-num" onclick="appendValue('5')">5</button>
-        <button class="btn btn-num" onclick="appendValue('6')">6</button>
-        <button class="btn btn-op" onclick="appendValue('-')">−</button>
-
-        <button class="btn btn-num" onclick="appendValue('1')">1</button>
-        <button class="btn btn-num" onclick="appendValue('2')">2</button>
-        <button class="btn btn-num" onclick="appendValue('3')">3</button>
-        <button class="btn btn-op" onclick="appendValue('+')">+</button>
-
-        <button class="btn btn-num btn-zero" onclick="appendValue('0')">0</button>
-        <button class="btn btn-num" onclick="appendValue('.')">.</button>
-        <button class="btn btn-equal" onclick="computeResult()">=</button>
-    </div>
-
-    <footer>
-        <p>© 2026 <strong>Максим Ковалишин</strong>. Усі права захищені.</p>
-        <p class="footer-sub">Калькулятор v1.0 (build 10) • Вміст захищено авторським правом</p>
-    </footer>
-</div>
-
-<div id="modal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h2>Про програму</h2>
-        <div class="modal-badge">Версія: v1.0 (build 10) • 2026</div>
-        <p class="modal-desc">
-            Швидкий та ергономічний веб-калькулятор із розширеними математичними функціями. Розроблено для швидких повсякденних і технічних обчислень.
-        </p>
-
-        <h3>Що нового в build 10:</h3>
-        <ul class="whats-new-list">
-            <li><strong>Новий дизайн кнопок:</strong> плавний неоморфний стиль з тактильним відгуком та кольоровим акцентом на операціях.</li>
-            <li><strong>Розширені можливості:</strong> додано обчислення квадратного кореня (√) та довільного степеня (xʸ).</li>
-            <li><strong>Пріоритет операцій:</strong> підтримка круглих дужок для складних виразів.</li>
-            <li><strong>Функція зміни знака (±):</strong> миттєва інверсія чисел без зайвих натискань.</li>
-            <li><strong>Оновлена інформаційна панель:</strong> структуроване вікно версії та довідки.</li>
-        </ul>
-
-        <div class="modal-footer">
-            <p>Автор: <strong>Максим Ковалишин</strong></p>
-            <p class="legal-note">Калькулятор v1.0 (build 10). 2026, вміст захищений під авторським правом.</p>
+    <!-- Модалки -->
+    <div class="modal-overlay" id="theme-modal">
+        <div class="modal-card">
+            <h3>🎨 Оформлення платформи</h3>
+            <p>Оберіть візуальну тему, яка найкраще підходить для вашого робочого середовища:</p>
+            <div class="theme-grid">
+                <button class="theme-btn active" id="th-dark" onclick="setTheme('dark')">
+                    <span>Темна (Професійна)</span> <span>🌙</span>
+                </button>
+                <button class="theme-btn" id="th-light" onclick="setTheme('light')">
+                    <span>Світла (Денна)</span> <span>☀️</span>
+                </button>
+                <button class="theme-btn" id="th-neon" onclick="setTheme('neon')">
+                    <span>Кібер Неон (Трейдер)</span> <span>⚡</span>
+                </button>
+            </div>
+            <button class="btn-close" onclick="closeModal('theme-modal')">Застосувати</button>
         </div>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-card">
+            <h3>❓ Довідка (v2.1)</h3>
+            <p><strong>ValutaFlow Exchange & Finance Pro</strong> — це професійна панель інструментів для моніторингу фінансів.</p>
+            <ul style="color: var(--text-secondary); line-height: 1.6; padding-left: 20px; font-size: 0.95rem;">
+                <li><strong>Фіатні ринки:</strong> Оновлюються через реальне API. Графіки показують тренд.</li>
+                <li><strong>Крипторинки:</strong> Новий модуль з розширеною статистикою (максимуми, мінімуми, об'єми).</li>
+                <li><strong>Розумний Конвертер:</strong> Дозволяє рахувати прямі та крос-курси між Фіатом та Криптою!</li>
+            </ul>
+            <button class="btn-close" onclick="closeModal('help-modal')" style="margin-top: 20px;">Зрозуміло</button>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="copyright-text">
+            © 2026 Максим Ковалишин. Вміст захищений під авторським правом. Всі права захищені.
+        </div>
+    </footer>
+
+    <script>
+        /* ДАНІ ФІАТУ ТА КРИПТИ */
+        const FIAT_LIST = [
+            { code: 'USD', name: 'Долар', flag: '🇺🇸' },
+            { code: 'EUR', name: 'Євро', flag: '🇪🇺' },
+            { code: 'GBP', name: 'Фунт', flag: '🇬🇧' },
+            { code: 'PLN', name: 'Злотий', flag: '🇵🇱' }
+        ];
+
+        const CRYPTO_LIST = [
+            { code: 'BTC', name: 'Bitcoin', flag: '₿', priceUSD: 64500, vol: '32B', h52: 73750, l52: 25000, sent: 'Buy', change: 2.4 },
+            { code: 'ETH', name: 'Ethereum', flag: '⧫', priceUSD: 3450, vol: '15B', h52: 4090, l52: 1530, sent: 'Hold', change: -1.2 },
+            { code: 'SOL', name: 'Solana', flag: '◎', priceUSD: 145, vol: '3.2B', h52: 210, l52: 19, sent: 'Buy', change: 5.8 }
+        ];
+
+        // Базові курси відносно UAH
+        let ratesDb = { 'UAH': 1 };
+        let historyDb = {};
+        
+        let activeTab = 'fiat';
+        let activeFiat = 'USD';
+        let activeCrypto = 'BTC';
+        let fiatChartInst = null;
+        let cryptoChartInst = null;
+
+        /* ІНІЦІАЛІЗАЦІЯ */
+        async function initApp() {
+            try {
+                // Отримуємо реальні дані з API (База USD)
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json();
+                const uahRate = data.rates.UAH;
+                
+                FIAT_LIST.forEach(f => {
+                    if(data.rates[f.code]) {
+                        ratesDb[f.code] = uahRate / data.rates[f.code];
+                    }
+                });
+            } catch (err) {
+                console.warn('API Error, using fallback rates.');
+                ratesDb = { 'UAH': 1, 'USD': 41.5, 'EUR': 44.8, 'GBP': 52.5, 'PLN': 10.3 };
+            }
+
+            // Розрахунок крипти в UAH
+            CRYPTO_LIST.forEach(c => {
+                ratesDb[c.code] = c.priceUSD * ratesDb['USD'];
+            });
+
+            generateMockHistory();
+            renderTicker();
+            populateConverter();
+            
+            // Перший рендер
+            renderFiatView();
+            renderCryptoView();
+            calculateConvert();
+        }
+
+        /* ГЕНЕРАЦІЯ ІСТОРІЇ (Графіки) */
+        function generateMockHistory() {
+            // Для Фіату
+            FIAT_LIST.forEach(f => {
+                const current = ratesDb[f.code];
+                let pts = []; let val = current * 0.95;
+                for(let i=0; i<30; i++) {
+                    pts.push(val); val += val * ((Math.random()-0.45)*0.01);
+                }
+                pts[29] = current;
+                historyDb[f.code] = { points: pts, change: ((pts[29]-pts[0])/pts[0])*100 };
+            });
+
+            // Для Крипти
+            CRYPTO_LIST.forEach(c => {
+                const current = c.priceUSD;
+                let pts = []; let val = current * (1 - (c.change/100)); 
+                for(let i=0; i<30; i++) {
+                    pts.push(val); val += val * ((Math.random()-0.5)*0.04); // Більша волатильність
+                }
+                pts[29] = current;
+                historyDb[c.code] = { points: pts, change: c.change };
+            });
+        }
+
+        /* TICKER BAR */
+        function renderTicker() {
+            let html = '';
+            const allItems = [...FIAT_LIST, ...CRYPTO_LIST];
+            for(let i=0; i<2; i++) { // Дублюємо для скролу
+                allItems.forEach(item => {
+                    const chg = historyDb[item.code].change;
+                    const isUp = chg >= 0;
+                    const cls = isUp ? 'tag-bull' : 'tag-bear';
+                    const sign = isUp ? '+' : '';
+                    let price = ratesDb[item.code];
+                    if(CRYPTO_LIST.includes(item)) price = item.priceUSD; // Крипта в USD для тікера
+                    
+                    html += `<span class="ticker-item">${item.flag} ${item.code} 
+                        <strong style="color:var(--text-primary)">${price.toLocaleString()}</strong> 
+                        <span class="${cls}">${sign}${chg.toFixed(2)}%</span></span>`;
+                });
+            }
+            document.getElementById('ticker-track').innerHTML = html;
+        }
+
+        /* FIAT VIEW */
+        function renderFiatView() {
+            const grid = document.getElementById('fiat-grid');
+            grid.innerHTML = '';
+            FIAT_LIST.forEach(f => {
+                const hist = historyDb[f.code];
+                const isUp = hist.change >= 0;
+                const card = document.createElement('div');
+                card.className = `curr-card ${f.code === activeFiat ? 'active-curr' : ''}`;
+                card.onclick = () => { activeFiat = f.code; renderFiatView(); };
+                
+                card.innerHTML = `
+                    <div class="curr-flag-name">
+                        <div class="curr-title-group"><span class="curr-flag">${f.flag}</span><span class="curr-code">${f.code}</span></div>
+                    </div>
+                    <div class="curr-rate-main">${ratesDb[f.code].toFixed(2)} ₴</div>
+                    <span class="curr-badge ${isUp ? 'badge-up' : 'badge-down'}">${isUp?'+':''}${hist.change.toFixed(2)}%</span>
+                `;
+                grid.appendChild(card);
+            });
+            drawChart('fiatChart', activeFiat, 'UAH', historyDb[activeFiat], fiatChartInst, (inst) => fiatChartInst = inst);
+        }
+
+        /* CRYPTO VIEW */
+        function renderCryptoView() {
+            const grid = document.getElementById('crypto-grid');
+            grid.innerHTML = '';
+            CRYPTO_LIST.forEach(c => {
+                const hist = historyDb[c.code];
+                const isUp = hist.change >= 0;
+                const card = document.createElement('div');
+                card.className = `curr-card ${c.code === activeCrypto ? 'active-curr' : ''}`;
+                card.onclick = () => { activeCrypto = c.code; renderCryptoView(); };
+                
+                card.innerHTML = `
+                    <div class="curr-flag-name">
+                        <div class="curr-title-group"><span class="curr-flag">${c.flag}</span><span class="curr-code">${c.code}</span></div>
+                    </div>
+                    <div class="curr-rate-main">$${c.priceUSD.toLocaleString()}</div>
+                    <span class="curr-badge ${isUp ? 'badge-up' : 'badge-down'}">${isUp?'+':''}${hist.change.toFixed(2)}%</span>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Update Stats
+            const activeData = CRYPTO_LIST.find(x => x.code === activeCrypto);
+            document.getElementById('stat-vol').innerText = activeData.vol;
+            document.getElementById('stat-high').innerText = '$' + activeData.h52.toLocaleString();
+            document.getElementById('stat-low').innerText = '$' + activeData.l52.toLocaleString();
+            
+            const sentBadge = document.getElementById('stat-sentiment');
+            sentBadge.innerText = activeData.sent;
+            sentBadge.className = `stat-val curr-badge ${activeData.sent === 'Buy' ? 'badge-up' : (activeData.sent === 'Hold' ? 'badge-neutral' : 'badge-down')}`;
+
+            drawChart('cryptoChart', activeCrypto, 'USD', historyDb[activeCrypto], cryptoChartInst, (inst) => cryptoChartInst = inst);
+        }
+
+        /* УНІВЕРСАЛЬНИЙ МАЛЮВАЛЬНИК ГРАФІКІВ (CHART.JS) */
+        function drawChart(canvasId, assetCode, baseCode, histData, chartInstance, setInstanceCallback) {
+            const isUp = histData.change >= 0;
+            const prefix = canvasId === 'fiatChart' ? 'fiat' : 'crypto';
+            
+            // Оновлюємо заголовки
+            document.getElementById(`${prefix}-chart-title`).innerText = `${assetCode} / ${baseCode}`;
+            const badge = document.getElementById(`${prefix}-chart-trend`);
+            badge.innerText = `${isUp?'+':''}${histData.change.toFixed(2)}%`;
+            badge.className = `curr-badge ${isUp ? 'badge-up' : 'badge-down'}`;
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            const strokeColor = isUp ? '#10b981' : '#ef4444';
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, isUp ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            const style = getComputedStyle(document.body);
+            const gridCol = style.getPropertyValue('--chart-grid').trim();
+            const textCol = style.getPropertyValue('--text-muted').trim();
+
+            const newInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `Д${i+1}`),
+                    datasets: [{
+                        data: histData.points,
+                        borderColor: strokeColor,
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: strokeColor
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { display: false },
+                        y: { grid: { color: gridCol }, ticks: { color: textCol, font: {family: 'JetBrains Mono'} } }
+                    }
+                }
+            });
+            setInstanceCallback(newInst);
+        }
+
+        /* КОНВЕРТЕР */
+        function populateConverter() {
+            const selFrom = document.getElementById('conv-from');
+            const selTo = document.getElementById('conv-to');
+            let opts = `<option value="UAH">🇺🇦 UAH - Гривня</option>
+                        <optgroup label="Фіат">`;
+            FIAT_LIST.forEach(f => opts += `<option value="${f.code}">${f.flag} ${f.code}</option>`);
+            opts += `</optgroup><optgroup label="Крипта">`;
+            CRYPTO_LIST.forEach(c => opts += `<option value="${c.code}">${c.flag} ${c.code}</option>`);
+            opts += `</optgroup>`;
+            
+            selFrom.innerHTML = opts; selTo.innerHTML = opts;
+            selFrom.value = 'USD'; selTo.value = 'UAH';
+        }
+
+        function calculateConvert() {
+            const amt = parseFloat(document.getElementById('conv-amount').value) || 0;
+            const from = document.getElementById('conv-from').value;
+            const to = document.getElementById('conv-to').value;
+            
+            const rFrom = ratesDb[from];
+            const rTo = ratesDb[to];
+            const cross = rFrom / rTo;
+            const result = amt * cross;
+            
+            document.getElementById('conv-result').value = result.toFixed(from==='BTC'||from==='ETH' || to==='BTC'||to==='ETH' ? 6 : 2);
+            document.getElementById('res-val-text').innerText = `${result.toLocaleString('en-US', {maximumFractionDigits: 4})} ${to}`;
+            document.getElementById('res-rate-text').innerText = `Курс: 1 ${from} = ${cross.toLocaleString('en-US', {maximumFractionDigits: 6})} ${to}`;
+        }
+
+        function swapConverter() {
+            const f = document.getElementById('conv-from');
+            const t = document.getElementById('conv-to');
+            let temp = f.value; f.value = t.value; t.value = temp;
+            calculateConvert();
+        }
+
+        /* НАВІГАЦІЯ */
+        function switchTab(tab) {
+            ['fiat', 'crypto', 'converter'].forEach(t => {
+                document.getElementById(`view-${t}`).style.display = t === tab ? 'block' : 'none';
+                document.getElementById(`nav-${t}`).classList.remove('active');
+            });
+            document.getElementById(`nav-${tab}`).classList.add('active');
+            
+            if(tab === 'fiat') renderFiatView();
+            if(tab === 'crypto') renderCryptoView();
+        }
+
+        /* МОДАЛКИ & ТЕМИ */
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        window.onclick = e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('active'); }
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`th-${theme}`).classList.add('active');
+            
+            // Перемальовуємо графіки для оновлення кольорів сітки
+            if(document.getElementById('view-fiat').style.display !== 'none') renderFiatView();
+            if(document.getElementById('view-crypto').style.display !== 'none') renderCryptoView();
+        }
+
+        // Запуск
+        window.onload = initApp;
+    </script>
 </body>
 </html>
